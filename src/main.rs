@@ -97,8 +97,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let payload = vec![0xAA, 0x00, 0x01, 0x08, 0xB3];
 
             println!("send");
-            let _ = l2
-                .write(&cmd, &payload, WriteType::WithoutResponse)
+            l2.write(&cmd, &payload, WriteType::WithoutResponse)
                 .await
                 .unwrap();
 
@@ -113,8 +112,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         if data.value[0] == 0xAA {
             data_buf = data.value;
-            let vdata: [u8; 6] = data_buf[5..11].try_into().unwrap();
-            let mut voltage = vdata.to_vec();
+            let mut voltage = Vec::new();
+            voltage.copy_from_slice(&data_buf[5..11]);
             voltage.extend_from_slice(&[0, 0]);
             let voltage: [u8; 8] = voltage.try_into().unwrap();
             let voltage = i64::from_le_bytes(voltage);
