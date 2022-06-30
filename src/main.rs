@@ -127,7 +127,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let current = i64::from_le_bytes(current);
             let current = current as f32 / 1073741824.0;
 
-            println!("V = {}, A = {}", voltage, current);
+            let mut wattage = vec![0; 6];
+            wattage.copy_from_slice(&data_buf[17..23]);
+            wattage.extend_from_slice(&[0, 0]);
+            let wattage: [u8; 8] = wattage.try_into().unwrap();
+            let wattage = i64::from_le_bytes(wattage);
+            let wattage = wattage as f32 / 16777216.0;
+
+            println!("V = {}, A = {}, W = {}", voltage, current, wattage);
         }
     }
     Ok(())
