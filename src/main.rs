@@ -1,12 +1,6 @@
-// See the "macOS permissions note" in README.md before running this on macOS
-// Big Sur or later.
-
 use std::convert::TryInto;
-use std::thread;
 
-use btleplug::api::{
-    bleuuid::uuid_from_u16, Central, Manager as _, Peripheral as _, ScanFilter, WriteType,
-};
+use btleplug::api::{Central, Manager as _, Peripheral as _, ScanFilter, WriteType};
 use btleplug::platform::{Adapter, Manager, Peripheral};
 use std::error::Error;
 use std::time::Duration;
@@ -48,7 +42,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .await
         .expect("Unable to fetch adapter list.")
         .into_iter()
-        .nth(0)
+        .next()
         .expect("Unable to find adapters.");
 
     // start scanning for devices
@@ -91,19 +85,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     //let data = light.read(&cmd_char).await?;
     //println!("{:?}", data);
-    light.subscribe(&tlm_char).await?;
+    light.subscribe(tlm_char).await?;
     let mut nstream = light.notifications().await?;
 
     let cmd = cmd_char.clone();
     let l2 = light.clone();
     tokio::spawn(async move {
-        let mut rt = tokio::runtime::Runtime::new().unwrap();
+        let _rt = tokio::runtime::Runtime::new().unwrap();
         loop {
-            let payload = vec![0xAA, 0x00, 0x01, 0x83];
+            let _payload = vec![0xAA, 0x00, 0x01, 0x83];
             let payload = vec![0xAA, 0x00, 0x01, 0x08, 0xB3];
 
             println!("send");
-            &l2.write(&cmd, &payload, WriteType::WithoutResponse)
+            let _ = l2
+                .write(&cmd, &payload, WriteType::WithoutResponse)
                 .await
                 .unwrap();
 
