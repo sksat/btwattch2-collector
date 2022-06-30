@@ -21,7 +21,7 @@ async fn find_light(central: &Adapter) -> Option<Peripheral> {
             .iter()
             .any(|name| {
                 println!("name: {}", name);
-                name.contains("4D7B")
+                name.contains("BTWATTCH2")
             })
         {
             let prop = p.properties().await.unwrap().unwrap();
@@ -30,6 +30,37 @@ async fn find_light(central: &Adapter) -> Option<Peripheral> {
         }
     }
     None
+}
+
+async fn is_btwattch2(peripheral: &Peripheral) -> bool {
+    if peripheral
+        .properties()
+        .await
+        .unwrap()
+        .unwrap()
+        .local_name
+        .iter()
+        .any(|name| name.contains("BTWATTCH2"))
+    {
+        return true;
+    }
+    false
+}
+
+async fn find_btwattch(central: &Adapter) -> Vec<Peripheral> {
+    let peripherals = central.peripherals().await.unwrap();
+    futures::stream::iter(peripherals)
+        .filter_map(|p| async {
+            if is_btwattch2(&p).await {
+                Some(p)
+            } else {
+                None
+            }
+        })
+        .collect()
+        .await
+    //let tmp = join_all(it).await;
+    //tmp.iter().collect::<Vec<Peripheral>>()
 }
 
 #[tokio::main]
@@ -53,6 +84,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // find the device we're interested in
     let light = find_light(&central).await.expect("No lights found");
+
+    let btwattch = find_btwattch(&central).await;
+    println!("btwattch: {:?}", btwattch);
 
     // connect to the device
     light.connect().await?;
