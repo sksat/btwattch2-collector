@@ -89,6 +89,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("btwattch: {:?}", btwattch);
 
     // connect to the device
+    for bw in btwattch.iter() {
+        bw.connect().await?;
+        if bw.is_connected().await? {
+            println!(
+                "connected: {}",
+                bw.properties().await?.unwrap().local_name.unwrap()
+            );
+        }
+    }
     light.connect().await?;
 
     if light.is_connected().await? {
