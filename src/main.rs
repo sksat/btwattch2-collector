@@ -125,7 +125,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             current.extend_from_slice(&[0, 0]);
             let current: [u8; 8] = current.try_into().unwrap();
             let current = i64::from_le_bytes(current);
-            let current = current as f32 / 1073741824000.0;
+            let current = current as f32 / 1073741824.0;
 
             println!("V = {}, A = {}", voltage, current);
         }
