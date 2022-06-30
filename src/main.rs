@@ -112,7 +112,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         if data.value[0] == 0xAA {
             data_buf = data.value;
-            let mut voltage = Vec::new();
+            let mut voltage = vec![0; 6];
             voltage.copy_from_slice(&data_buf[5..11]);
             voltage.extend_from_slice(&[0, 0]);
             let voltage: [u8; 8] = voltage.try_into().unwrap();
