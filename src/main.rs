@@ -112,13 +112,22 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         if data.value[0] == 0xAA {
             data_buf = data.value;
+
             let mut voltage = vec![0; 6];
             voltage.copy_from_slice(&data_buf[5..11]);
             voltage.extend_from_slice(&[0, 0]);
             let voltage: [u8; 8] = voltage.try_into().unwrap();
             let voltage = i64::from_le_bytes(voltage);
             let voltage = voltage as f32 / 16777216.0;
-            println!("{}", voltage);
+
+            let mut current = vec![0; 6];
+            current.copy_from_slice(&data_buf[11..17]);
+            current.extend_from_slice(&[0, 0]);
+            let current: [u8; 8] = current.try_into().unwrap();
+            let current = i64::from_le_bytes(current);
+            let current = current as f32 / 1073741824000.0;
+
+            println!("V = {}, A = {}", voltage, current);
         }
     }
     Ok(())
