@@ -99,7 +99,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .expect("Unable to find characterics");
 
     let btw_nstream: Vec<_> = futures::stream::iter(btwattch.clone())
-        .then(|bw| async move { bw.notifications().await.unwrap() })
+        .then(|bw| async move { (bw.address(), bw.notifications().await.unwrap()) })
         //.map(|bw| (true, false))
         .collect()
         .await;
@@ -131,6 +131,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         for nstream in &mut btw_nstream {
             let data_buf = &mut nstream.1;
             let nstream = &mut nstream.0;
+
+            let addr = nstream.0;
+            let nstream = &mut nstream.1;
             if let Some(data) = nstream.next().await {
                 // receive to buf
                 if data.value[0] == 0xAA {
@@ -139,7 +142,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     data_buf.extend(data.value);
                 }
 
-                println!("recv: {:x?}", data_buf);
+                //println!("recv: {:x?}", data_buf);
 
                 if data_buf.len() < 23 {
                     continue;
@@ -168,7 +171,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 let wattage = i64::from_le_bytes(wattage);
                 let wattage = wattage as f32 / 16777216.0;
 
-                println!("V = {}, A = {}, W = {}", voltage, current, wattage);
+                println!(
+                    "addr = {}, V = {}, A = {}, W = {}",
+                    addr, voltage, current, wattage
+                );
             }
         }
     }
