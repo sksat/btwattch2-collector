@@ -127,12 +127,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut btw_nstream: Vec<(_, Vec<u8>)> =
         btw_nstream.into_iter().zip(vec![Vec::new(); len]).collect();
 
+    //let iclient = influxdb::Client::new("http://pi4.sksat.net:8086" "");
+    let itoken = std::env::var("INFLUXDB_TOKEN").unwrap();
+    let iclient = influxdb2_client::Client::new("http://pi4.sksat.net:8086", itoken);
+
     loop {
         for nstream in &mut btw_nstream {
             let data_buf = &mut nstream.1;
             let nstream = &mut nstream.0;
 
-            let addr = nstream.0;
+            let address = nstream.0;
             let nstream = &mut nstream.1;
             if let Some(data) = nstream.next().await {
                 // receive to buf
@@ -155,26 +159,64 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 voltage.extend_from_slice(&[0, 0]);
                 let voltage: [u8; 8] = voltage.try_into().unwrap();
                 let voltage = i64::from_le_bytes(voltage);
-                let voltage = voltage as f32 / 16777216.0;
+                let voltage = voltage as f64 / 16777216.0;
 
                 let mut current = vec![0; 6];
                 current.copy_from_slice(&data_buf[11..17]);
                 current.extend_from_slice(&[0, 0]);
                 let current: [u8; 8] = current.try_into().unwrap();
                 let current = i64::from_le_bytes(current);
-                let current = current as f32 / 1073741824.0;
+                let current = current as f64 / 1073741824.0;
 
                 let mut wattage = vec![0; 6];
                 wattage.copy_from_slice(&data_buf[17..23]);
                 wattage.extend_from_slice(&[0, 0]);
                 let wattage: [u8; 8] = wattage.try_into().unwrap();
                 let wattage = i64::from_le_bytes(wattage);
-                let wattage = wattage as f32 / 16777216.0;
+                let wattage = wattage as f64 / 16777216.0;
 
                 println!(
                     "addr = {}, V = {}, A = {}, W = {}",
-                    addr, voltage, current, wattage
+                    address, voltage, current, wattage
                 );
+
+                let point = influxdb2_client::models::DataPoint::builder("btwattch2")
+                    .tag("address", address.to_string())
+                    .field("voltage", voltage)
+                    .field("ampere", current)
+                    .field("wattage", wattage)
+                    .build()?;
+
+                let org = std::env::var("INFLUXDB_ORG").unwrap();
+                let bucket = std::env::var("INFLUXDB_BUCKET").unwrap();
+                iclient
+                    .write(&org, &bucket, futures::stream::iter(vec![point]))
+                    .await?;
+
+                //#[derive(InfluxDbWriteable)]
+                //struct Wattch2Data {
+                //    time: chrono::DateTime<chrono::Utc>,
+                //    #[influxdb(tag)]
+                //    address: String,
+                //    voltage: f32,
+                //    ampere: f32,
+                //    wattage: f32,
+                //}
+
+                //let address = address.to_string();
+                //let time = chrono::Utc::now();
+                //let data = Wattch2Data {
+                //    time,
+                //    address,
+                //    voltage,
+                //    ampere: current,
+                //    wattage,
+                //};
+
+                //iclient
+                //    .query(data.into_query("btwattch2"))
+                //    .await
+                //    .expect("failed to write query to InfluxDB");
             }
         }
     }
