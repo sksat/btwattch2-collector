@@ -97,39 +97,31 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 bw.properties().await?.unwrap().local_name.unwrap()
             );
         }
+        bw.discover_services().await?;
+
+        // find the characteristic we want
+        let chars = bw.characteristics();
+        let rx_uuid = Uuid::parse_str("6e400003-b5a3-f393-e0a9-e50e24dcca9e").unwrap();
+        let tlm_char = chars
+            .iter()
+            .clone()
+            .find(|c| {
+                println!("{}", c.uuid);
+                c.uuid == rx_uuid
+            })
+            .expect("Unable to find characterics");
+        bw.subscribe(tlm_char).await?
     }
-    light.connect().await?;
 
-    if light.is_connected().await? {
-        println!("connected");
-    }
-
-    // discover services and characteristics
-    light.discover_services().await?;
-
-    // find the characteristic we want
     let chars = light.characteristics();
     let mut chars_it = chars.iter();
     let tx_uuid = Uuid::parse_str("6e400002-b5a3-f393-e0a9-e50e24dcca9e").unwrap();
-    let rx_uuid = Uuid::parse_str("6e400003-b5a3-f393-e0a9-e50e24dcca9e").unwrap();
     let cmd_char = chars_it
         .find(|c| {
             println!("{}", c.uuid);
             c.uuid == tx_uuid
         })
         .expect("Unable to find characterics");
-    let tlm_char = chars_it
-        .clone()
-        .find(|c| {
-            println!("{}", c.uuid);
-            c.uuid == rx_uuid
-        })
-        .expect("Unable to find characterics");
-
-    //let data = light.read(&cmd_char).await?;
-    //println!("{:?}", data);
-    light.subscribe(tlm_char).await?;
-    let _nstream = light.notifications().await?;
 
     let btw_nstream: Vec<_> = futures::stream::iter(btwattch.clone())
         .then(|bw| async move { bw.notifications().await.unwrap() })
