@@ -111,7 +111,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let _payload = vec![0xAA, 0x00, 0x01, 0x83];
             let payload = vec![0xAA, 0x00, 0x01, 0x08, 0xB3];
 
-            println!("send");
+            //println!("send");
 
             for bw in btwattch.iter() {
                 bw.write(&cmd, &payload, WriteType::WithoutResponse)
