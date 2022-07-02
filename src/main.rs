@@ -6,7 +6,6 @@ use std::error::Error;
 use std::time::Duration;
 use uuid::Uuid;
 
-//const LIGHT_CHARACTERISTIC_UUID: Uuid = uuid_from_str("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 use tokio::time;
 
 use futures::stream::StreamExt;
@@ -100,7 +99,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let btw_nstream: Vec<_> = futures::stream::iter(btwattch.clone())
         .then(|bw| async move { (bw.address(), bw.notifications().await.unwrap()) })
-        //.map(|bw| (true, false))
         .collect()
         .await;
 
@@ -127,7 +125,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut btw_nstream: Vec<(_, Vec<u8>)> =
         btw_nstream.into_iter().zip(vec![Vec::new(); len]).collect();
 
-    //let iclient = influxdb::Client::new("http://pi4.sksat.net:8086" "");
     let itoken = std::env::var("INFLUXDB_TOKEN").unwrap();
     let iclient = influxdb2_client::Client::new("http://pi4.sksat.net:8086", itoken);
 
@@ -192,31 +189,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 iclient
                     .write(&org, &bucket, futures::stream::iter(vec![point]))
                     .await?;
-
-                //#[derive(InfluxDbWriteable)]
-                //struct Wattch2Data {
-                //    time: chrono::DateTime<chrono::Utc>,
-                //    #[influxdb(tag)]
-                //    address: String,
-                //    voltage: f32,
-                //    ampere: f32,
-                //    wattage: f32,
-                //}
-
-                //let address = address.to_string();
-                //let time = chrono::Utc::now();
-                //let data = Wattch2Data {
-                //    time,
-                //    address,
-                //    voltage,
-                //    ampere: current,
-                //    wattage,
-                //};
-
-                //iclient
-                //    .query(data.into_query("btwattch2"))
-                //    .await
-                //    .expect("failed to write query to InfluxDB");
             }
         }
     }
