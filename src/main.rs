@@ -11,27 +11,6 @@ use tokio::time;
 
 use futures::stream::StreamExt;
 
-async fn find_light(central: &Adapter) -> Option<Peripheral> {
-    for p in central.peripherals().await.unwrap() {
-        if p.properties()
-            .await
-            .unwrap()
-            .unwrap()
-            .local_name
-            .iter()
-            .any(|name| {
-                println!("name: {}", name);
-                name.contains("BTWATTCH2")
-            })
-        {
-            let prop = p.properties().await.unwrap().unwrap();
-            println!("prop: {:?}", prop);
-            return Some(p);
-        }
-    }
-    None
-}
-
 async fn is_btwattch2(peripheral: &Peripheral) -> bool {
     if peripheral
         .properties()
@@ -82,9 +61,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // notify you of new devices, for an example of that see examples/event_driven_discovery.rs
     time::sleep(Duration::from_secs(2)).await;
 
-    // find the device we're interested in
-    let light = find_light(&central).await.expect("No lights found");
-
     let btwattch = find_btwattch(&central).await;
     println!("btwattch: {:?}", btwattch);
 
@@ -104,7 +80,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let rx_uuid = Uuid::parse_str("6e400003-b5a3-f393-e0a9-e50e24dcca9e").unwrap();
         let tlm_char = chars
             .iter()
-            .clone()
             .find(|c| {
                 println!("{}", c.uuid);
                 c.uuid == rx_uuid
@@ -113,7 +88,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         bw.subscribe(tlm_char).await?
     }
 
-    let chars = light.characteristics();
+    let chars = btwattch[0].characteristics();
     let mut chars_it = chars.iter();
     let tx_uuid = Uuid::parse_str("6e400002-b5a3-f393-e0a9-e50e24dcca9e").unwrap();
     let cmd_char = chars_it
@@ -129,20 +104,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .collect()
         .await;
 
-    //let mut btw_nstream = Vec::new();
-    //let btw_nstream: Vec<_> = btwattch
-    //    .iter()
-    //    .map(|bw| {
-    //        let rt = tokio::runtime::Runtime::new().unwrap();
-    //        rt.block_on(async {
-    //            let n = bw.notifications().await.unwrap();
-    //        });
-    //    })
-    //    //.map(|bw| (true, false))
-    //    .collect();
-
     let cmd = cmd_char.clone();
-    let l2 = light.clone();
     tokio::spawn(async move {
         let _rt = tokio::runtime::Runtime::new().unwrap();
         loop {
@@ -150,9 +112,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let payload = vec![0xAA, 0x00, 0x01, 0x08, 0xB3];
 
             println!("send");
-            l2.write(&cmd, &payload, WriteType::WithoutResponse)
-                .await
-                .unwrap();
 
             for bw in btwattch.iter() {
                 bw.write(&cmd, &payload, WriteType::WithoutResponse)
@@ -164,10 +123,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
     });
 
-    //let mut btw_nstream: Vec<(_, Vec<u8>)> = btw_nstream
-    //    .iter()
-    //    .map(move |mut ns| (ns, Vec::new()))
-    //    .collect();
     let len = btw_nstream.len();
     let btw_nstream: Vec<(_, Vec<u8>)> =
         btw_nstream.into_iter().zip(vec![Vec::new(); len]).collect();
