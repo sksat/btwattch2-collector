@@ -2,6 +2,7 @@ version: "3"
 
 services:
   btwattch-collector:
+    restart: always
     build: .
     privileged: true
     network_mode: host
