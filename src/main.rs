@@ -124,52 +124,52 @@ async fn main() -> Result<(), Box<dyn Error>> {
     });
 
     let len = btw_nstream.len();
-    let btw_nstream: Vec<(_, Vec<u8>)> =
+    let mut btw_nstream: Vec<(_, Vec<u8>)> =
         btw_nstream.into_iter().zip(vec![Vec::new(); len]).collect();
 
-    for mut nstream in btw_nstream {
-        let data_buf = &mut nstream.1;
-        let nstream = &mut nstream.0;
-        while let Some(data) = nstream.next().await {
-            // receive to buf
-            if data.value[0] == 0xAA {
-                *data_buf = data.value;
-            } else {
-                data_buf.extend(data.value);
+    loop {
+        for nstream in &mut btw_nstream {
+            let data_buf = &mut nstream.1;
+            let nstream = &mut nstream.0;
+            if let Some(data) = nstream.next().await {
+                // receive to buf
+                if data.value[0] == 0xAA {
+                    *data_buf = data.value;
+                } else {
+                    data_buf.extend(data.value);
+                }
+
+                println!("recv: {:x?}", data_buf);
+
+                if data_buf.len() < 23 {
+                    continue;
+                }
+
+                // deserialize
+
+                let mut voltage = vec![0; 6];
+                voltage.copy_from_slice(&data_buf[5..11]);
+                voltage.extend_from_slice(&[0, 0]);
+                let voltage: [u8; 8] = voltage.try_into().unwrap();
+                let voltage = i64::from_le_bytes(voltage);
+                let voltage = voltage as f32 / 16777216.0;
+
+                let mut current = vec![0; 6];
+                current.copy_from_slice(&data_buf[11..17]);
+                current.extend_from_slice(&[0, 0]);
+                let current: [u8; 8] = current.try_into().unwrap();
+                let current = i64::from_le_bytes(current);
+                let current = current as f32 / 1073741824.0;
+
+                let mut wattage = vec![0; 6];
+                wattage.copy_from_slice(&data_buf[17..23]);
+                wattage.extend_from_slice(&[0, 0]);
+                let wattage: [u8; 8] = wattage.try_into().unwrap();
+                let wattage = i64::from_le_bytes(wattage);
+                let wattage = wattage as f32 / 16777216.0;
+
+                println!("V = {}, A = {}, W = {}", voltage, current, wattage);
             }
-
-            println!("recv: {:x?}", data_buf);
-
-            if data_buf.len() < 23 {
-                continue;
-            }
-
-            // deserialize
-
-            let mut voltage = vec![0; 6];
-            voltage.copy_from_slice(&data_buf[5..11]);
-            voltage.extend_from_slice(&[0, 0]);
-            let voltage: [u8; 8] = voltage.try_into().unwrap();
-            let voltage = i64::from_le_bytes(voltage);
-            let voltage = voltage as f32 / 16777216.0;
-
-            let mut current = vec![0; 6];
-            current.copy_from_slice(&data_buf[11..17]);
-            current.extend_from_slice(&[0, 0]);
-            let current: [u8; 8] = current.try_into().unwrap();
-            let current = i64::from_le_bytes(current);
-            let current = current as f32 / 1073741824.0;
-
-            let mut wattage = vec![0; 6];
-            wattage.copy_from_slice(&data_buf[17..23]);
-            wattage.extend_from_slice(&[0, 0]);
-            let wattage: [u8; 8] = wattage.try_into().unwrap();
-            let wattage = i64::from_le_bytes(wattage);
-            let wattage = wattage as f32 / 16777216.0;
-
-            println!("V = {}, A = {}, W = {}", voltage, current, wattage);
         }
     }
-
-    Ok(())
 }
