@@ -4,7 +4,7 @@ services:
   btwattch-collector:
     restart: always
     build: .
-    privileged: true
+    #privileged: true
     network_mode: host
     #cap_add:
     #  - NET_ADMIN
