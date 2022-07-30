@@ -18,6 +18,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3.0.2
 
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libdbus-1-dev pkg-config
+
       - name: Get Rust toolchain
         id: toolchain
         run: |
