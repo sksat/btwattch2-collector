@@ -5,6 +5,8 @@ services:
     restart: always
     build: .
     #privileged: true
+    security_opt:
+      - apparmor=unconfined
     network_mode: host
     #cap_add:
     #  - NET_ADMIN
