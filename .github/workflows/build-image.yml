@@ -1,0 +1,44 @@
+name: Build container image
+
+on:
+  push:
+    branches:
+      - 'main'
+    tags:
+      - 'v*'
+  pull_request:
+
+jobs:
+  build_image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.0.2
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2.0.0
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4.0.1
+        with:
+          images: |
+            ghcr.io/sksat/btwattch2-collector
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Bake & Push
+        uses: docker/bake-action@v2.2.0
+        with:
+          targets: build
+          #push: ${{ github.ref_name == 'main' }}
+          set: |
+            *.cache-from=type=gha
+            *.cache-to=type=gha,mode=max
+          files: |
+            ./docker-bake.hcl
+            ${{ steps.meta.outputs.bake-file }}
