@@ -35,7 +35,7 @@ jobs:
         uses: docker/bake-action@v2.2.0
         with:
           targets: build
-          #push: ${{ github.ref_name == 'main' }}
+          push: ${{ github.ref_name == 'main' }}
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
