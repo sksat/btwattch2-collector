@@ -44,7 +44,7 @@ jobs:
       - name: Bake & Push
         uses: docker/bake-action@v2.2.0
         with:
-          targets: build
+          targets: release
           push: ${{ github.ref_name == 'main' }}
           set: |
             *.cache-from=type=gha
