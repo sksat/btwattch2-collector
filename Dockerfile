@@ -34,4 +34,5 @@ RUN passwd -d bluezuser
 USER bluezuser
 WORKDIR /app
 COPY --from=builder /build/target/release/btwattch2-collector /app/
-CMD ["/app/btwattch2-collector"]
+COPY entrypoint.sh /app/
+CMD ["/app/entrypoint.sh"]
