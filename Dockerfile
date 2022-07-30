@@ -1,7 +1,7 @@
 FROM gcr.io/distroless/cc
 LABEL maintainer "sksat <sksat@sksat.net>"
 
-FROM rust:1.62.0 as chef
+FROM rust:1.62.1 as chef
 # depName=LukeMathWalker/cargo-chef datasource=github-releases
 ARG CARGO_CHEF_VERSION="v0.1.36"
 RUN cargo install --version "${CARGO_CHEF_VERSION#v}" cargo-chef
