@@ -7,6 +7,15 @@ target "build" {
   dockerfile = "Dockerfile"
   platforms = [
     "linux/amd64",
+    #"linux/arm64",
+  ]
+}
+
+target "build-nochef" {
+  inherits = ["docker-metadata-action"]
+  context = "./"
+  dockerfile = "Dockerfile.nochef"
+  platforms = [
     "linux/arm64",
   ]
 }
