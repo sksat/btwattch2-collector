@@ -27,12 +27,7 @@ RUN cargo build --release
 
 #FROM gcr.io/distroless/cc
 FROM debian:bullseye-slim
-COPY ./bluezuser.conf /etc/dbus-1/system.d/
-RUN apt-get update && apt-get install -y libdbus-1-dev bluez sudo
-RUN useradd -m bluezuser && adduser bluezuser sudo
-RUN passwd -d bluezuser
-USER bluezuser
+RUN apt-get update && apt-get install -y libdbus-1-dev bluez
 WORKDIR /app
 COPY --from=builder /build/target/release/btwattch2-collector /app/
-COPY entrypoint.sh /app/
-CMD ["/app/entrypoint.sh"]
+CMD ["/app/btwattch2-collector"]
