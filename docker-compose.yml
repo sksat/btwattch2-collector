@@ -15,6 +15,6 @@ services:
     volumes:
       - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket
     environment:
-      INFLUXDB_ORG: 'pi4-sksat'
-      INFLUXDB_BUCKET: 'btwattch2'
-      INFLUXDB_TOKEN: '3FpcV0z5NwL14ki1BB4PXUNVJWvXzCNY6hcWpzyc26FheO77yaScnF3npJQ_GtRDMTWJSKIIqorhaHfaEiR5Qw=='
+      - INFLUXDB_ORG
+      - INFLUXDB_BUCKET
+      - INFLUXDB_TOKEN
