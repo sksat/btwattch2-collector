@@ -2,7 +2,7 @@
 target "docker-metadata-action" {}
 
 group "release" {
-  targets = ["build", "build-nochef"]
+  targets = ["build"]
 }
 
 target "build" {
@@ -11,7 +11,7 @@ target "build" {
   dockerfile = "Dockerfile"
   platforms = [
     "linux/amd64",
-    #"linux/arm64",
+    "linux/arm64",
   ]
 }
 
