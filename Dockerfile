@@ -1,7 +1,7 @@
 FROM gcr.io/distroless/cc
 LABEL maintainer "sksat <sksat@sksat.net>"
 
-FROM ghcr.io/sksat/cargo-chef-docker:1.62.1-slim-bullseye as chef
+FROM ghcr.io/sksat/cargo-chef-docker:1.63.0-slim-bullseye as chef
 WORKDIR /build
 
 FROM chef as planner
