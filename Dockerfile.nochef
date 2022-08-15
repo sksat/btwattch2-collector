@@ -4,7 +4,7 @@ LABEL maintainer "sksat <sksat@sksat.net>"
 # build
 FROM rust:1.63.0 as builder
 WORKDIR /build
-RUN apt-get update && apt-get install -y libdbus-1-dev pkg-config
+RUN apt-get update && apt-get install -y --no-install-recommends libdbus-1-dev pkg-config
 COPY Cargo.toml .
 COPY Cargo.lock .
 COPY src/ src/
@@ -12,7 +12,7 @@ COPY src/ src/
 RUN cargo build --release
 
 FROM debian:bullseye-slim
-RUN apt-get update && apt-get install -y libdbus-1-dev bluez
+RUN apt-get update && apt-get install -y --no-install-recommends libdbus-1-dev bluez
 WORKDIR /app
 COPY --from=builder /build/target/release/btwattch2-collector /app/
 CMD ["/app/btwattch2-collector"]
