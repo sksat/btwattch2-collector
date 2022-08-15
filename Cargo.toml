@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-btleplug = "0.9.2"
+btleplug = "0.10.0"
 chrono = "0.4.22"
 futures = "0.3.23"
 #influxdb = { version = "0.5.2", default-features = false, features = ["derive", "use-serde", "h1-client-rustls"] }
