@@ -6,10 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-btleplug = "0.9.2"
+btleplug = "0.10.0"
 chrono = "0.4.22"
 futures = "0.3.23"
 #influxdb = { version = "0.5.2", default-features = false, features = ["derive", "use-serde", "h1-client-rustls"] }
 influxdb2_client = { git = "https://github.com/influxdata/influxdb_iox" }
 tokio = { version = "1.20.1", features = ["macros", "rt", "rt-multi-thread"] }
-uuid = "0.8.2"
+uuid = "1.1.2"
