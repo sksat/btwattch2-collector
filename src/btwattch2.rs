@@ -1,7 +1,12 @@
+use uuid::{uuid, Uuid};
+
 use btleplug::api::{Central, Peripheral as _};
 use btleplug::platform::{Adapter, Peripheral};
 
 use futures::stream::StreamExt;
+
+pub const TX_UUID: Uuid = uuid!("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
+pub const RX_UUID: Uuid = uuid!("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 
 pub async fn is_btwattch2(peripheral: &Peripheral) -> bool {
     if peripheral

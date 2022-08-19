@@ -4,7 +4,6 @@ use btleplug::api::{Central, Manager as _, Peripheral as _, ScanFilter, WriteTyp
 use btleplug::platform::Manager;
 use std::error::Error;
 use std::time::Duration;
-use uuid::Uuid;
 
 use tokio::time;
 
@@ -74,12 +73,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         // find the characteristic we want
         let chars = bw.characteristics();
-        let rx_uuid = Uuid::parse_str("6e400003-b5a3-f393-e0a9-e50e24dcca9e").unwrap();
         let tlm_char = chars
             .iter()
             .find(|c| {
                 info!("{}", c.uuid);
-                c.uuid == rx_uuid
+                c.uuid == btwattch2::RX_UUID
             })
             .expect("Unable to find characterics");
         bw.subscribe(tlm_char).await?
@@ -87,11 +85,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let chars = btwattch[0].characteristics();
     let mut chars_it = chars.iter();
-    let tx_uuid = Uuid::parse_str("6e400002-b5a3-f393-e0a9-e50e24dcca9e").unwrap();
     let cmd_char = chars_it
         .find(|c| {
             info!("{}", c.uuid);
-            c.uuid == tx_uuid
+            c.uuid == btwattch2::TX_UUID
         })
         .expect("Unable to find characterics");
 
