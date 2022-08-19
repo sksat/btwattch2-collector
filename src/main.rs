@@ -10,6 +10,24 @@ use tokio::time;
 
 use futures::stream::StreamExt;
 
+use structopt::StructOpt;
+
+#[derive(Debug, Clone, StructOpt)]
+#[structopt(name = "btwattch2-collector")]
+struct Opt {
+    #[structopt(env)]
+    inflxdb_host: String,
+
+    #[structopt(env)]
+    inflxdb_org: String,
+
+    #[structopt(env)]
+    inflxdb_bucket: String,
+
+    #[structopt(env)]
+    inflxdb_token: String,
+}
+
 async fn is_btwattch2(peripheral: &Peripheral) -> bool {
     if peripheral
         .properties()
@@ -43,6 +61,8 @@ async fn find_btwattch(central: &Adapter) -> Vec<Peripheral> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    let opt = Opt::from_args();
+
     let manager = Manager::new().await.unwrap();
 
     // get the first bluetooth adapter
@@ -125,9 +145,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut btw_nstream: Vec<(_, Vec<u8>)> =
         btw_nstream.into_iter().zip(vec![Vec::new(); len]).collect();
 
-    let itoken = std::env::var("INFLUXDB_TOKEN").unwrap();
-    let ihost = std::env::var("INFLUXDB_HOST").unwrap();
-    let iclient = influxdb2_client::Client::new(ihost, itoken);
+    let iclient = influxdb2_client::Client::new(opt.inflxdb_host, opt.inflxdb_token);
 
     loop {
         for nstream in &mut btw_nstream {
@@ -185,10 +203,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     .field("wattage", wattage)
                     .build()?;
 
-                let org = std::env::var("INFLUXDB_ORG").unwrap();
-                let bucket = std::env::var("INFLUXDB_BUCKET").unwrap();
                 iclient
-                    .write(&org, &bucket, futures::stream::iter(vec![point]))
+                    .write(
+                        &opt.inflxdb_org,
+                        &opt.inflxdb_bucket,
+                        futures::stream::iter(vec![point]),
+                    )
                     .await?;
             }
         }
