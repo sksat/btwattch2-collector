@@ -1,18 +1,20 @@
 [package]
-name = "btwattch2-collector"
+name = "btwattch2-control"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+actix-web = "4.1.0"
 btleplug = "0.10.0"
 byteorder = "1.4.3"
 chrono = "0.4.22"
 crc = "3.0.0"
 futures = "0.3.23"
+serde = "1.0.143"
 #influxdb = { version = "0.5.2", default-features = false, features = ["derive", "use-serde", "h1-client-rustls"] }
-influxdb2_client = { git = "https://github.com/influxdata/influxdb_iox" }
+#influxdb2_client = { git = "https://github.com/influxdata/influxdb_iox" }
 structopt = "0.3.26"
 tokio = { version = "1.20.1", features = ["macros", "rt", "rt-multi-thread"] }
 tracing = "0.1.36"
