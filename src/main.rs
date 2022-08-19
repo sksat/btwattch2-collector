@@ -126,7 +126,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         btw_nstream.into_iter().zip(vec![Vec::new(); len]).collect();
 
     let itoken = std::env::var("INFLUXDB_TOKEN").unwrap();
-    let iclient = influxdb2_client::Client::new("http://pi4.sksat.net:8086", itoken);
+    let ihost = std::env::var("INFLUXDB_HOST").unwrap();
+    let iclient = influxdb2_client::Client::new(ihost, itoken);
 
     loop {
         for nstream in &mut btw_nstream {
