@@ -12,6 +12,7 @@ pub const RX_UUID: Uuid = uuid!("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 
 pub const CMD_HEADER: &[u8] = &[0xAA];
 pub const CMD_TURN_OFF: &[u8] = &[0xA7, 0x00];
+pub const CMD_TURN_ON: &[u8] = &[0xA7, 0x01];
 
 pub const CMD_MONITORING: &[u8] = &[0x08];
 

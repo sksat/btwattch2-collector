@@ -25,9 +25,16 @@ mod btwattch2;
 #[structopt(name = "btwattch2-collector")]
 struct Opt {}
 
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "lowercase")]
+enum TargetAction {
+    On,
+    Off,
+}
+
 #[derive(Deserialize)]
 struct Target {
-    action: String,
+    action: TargetAction,
     addr: String,
 }
 
@@ -59,7 +66,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 }
 
 async fn command(arg: Json<Target>) -> impl IntoResponse {
-    info!("addr: {}, action: {}", arg.addr, arg.action);
+    info!("addr: {}, action: {:?}", arg.addr, arg.action);
 
     let manager = Manager::new().await.unwrap();
 
@@ -115,7 +122,10 @@ async fn command(arg: Json<Target>) -> impl IntoResponse {
         .expect("Unable to find characterics");
 
     let cmd = cmd_char.clone();
-    let payload = btwattch2::gen_cmd(btwattch2::CMD_TURN_OFF);
+    let payload = match arg.action {
+        TargetAction::On => btwattch2::gen_cmd(btwattch2::CMD_TURN_ON),
+        TargetAction::Off => btwattch2::gen_cmd(btwattch2::CMD_TURN_OFF),
+    };
 
     debug!("send");
 
