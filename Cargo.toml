@@ -11,5 +11,6 @@ chrono = "0.4.22"
 futures = "0.3.23"
 #influxdb = { version = "0.5.2", default-features = false, features = ["derive", "use-serde", "h1-client-rustls"] }
 influxdb2_client = { git = "https://github.com/influxdata/influxdb_iox" }
+structopt = "0.3.26"
 tokio = { version = "1.20.1", features = ["macros", "rt", "rt-multi-thread"] }
 uuid = "1.1.2"
