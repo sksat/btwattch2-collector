@@ -10,7 +10,9 @@ use futures::stream::StreamExt;
 pub const TX_UUID: Uuid = uuid!("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
 pub const RX_UUID: Uuid = uuid!("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 
-pub const CMD_HEADER: &'static [u8] = &[0xAA];
+pub const CMD_HEADER: &[u8] = &[0xAA];
+
+pub const CMD_MONITORING: &[u8] = &[0x08];
 
 pub const CRC_8_BTWATTCH2: crc::Algorithm<u8> = crc::Algorithm {
     width: 8,
@@ -23,7 +25,7 @@ pub const CRC_8_BTWATTCH2: crc::Algorithm<u8> = crc::Algorithm {
     residue: 0x00,
 };
 
-pub fn gen_cmd(payload: Vec<u8>) -> Vec<u8> {
+pub fn gen_cmd(payload: &[u8]) -> Vec<u8> {
     let size = {
         let mut wtr = vec![];
         wtr.write_u16::<BigEndian>(payload.len() as u16).unwrap();
@@ -31,7 +33,7 @@ pub fn gen_cmd(payload: Vec<u8>) -> Vec<u8> {
     };
 
     let crc8 = crc::Crc::<u8>::new(&CRC_8_BTWATTCH2);
-    let crc8 = crc8.checksum(&payload);
+    let crc8 = crc8.checksum(payload);
 
     let mut p: Vec<u8> = CMD_HEADER.to_vec();
     p.extend(size);
@@ -40,13 +42,9 @@ pub fn gen_cmd(payload: Vec<u8>) -> Vec<u8> {
     p
 }
 
-mod tests {
-    use super::*;
-
-    #[test]
-    fn generate_command() {
-        assert_eq!(gen_cmd(vec![0x08]), vec![0xAA, 0x00, 0x01, 0x08, 0xB3]);
-    }
+#[test]
+fn test_generate_command() {
+    assert_eq!(gen_cmd(CMD_MONITORING), vec![0xAA, 0x00, 0x01, 0x08, 0xB3]);
 }
 
 pub async fn is_btwattch2(peripheral: &Peripheral) -> bool {

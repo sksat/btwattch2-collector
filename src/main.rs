@@ -101,8 +101,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     tokio::spawn(async move {
         let _rt = tokio::runtime::Runtime::new().unwrap();
         loop {
-            let _payload = vec![0xAA, 0x00, 0x01, 0x83];
-            let payload = vec![0xAA, 0x00, 0x01, 0x08, 0xB3];
+            let _payload = vec![0xAA, 0x00, 0x01, 0x08, 0xB3];
+            let payload = btwattch2::gen_cmd(btwattch2::CMD_MONITORING);
 
             debug!("send");
 
