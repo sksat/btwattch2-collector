@@ -12,6 +12,9 @@ use futures::stream::StreamExt;
 
 use structopt::StructOpt;
 
+use tracing::{debug, info};
+use tracing_subscriber;
+
 #[derive(Debug, Clone, StructOpt)]
 #[structopt(name = "btwattch2-collector")]
 struct Opt {
@@ -61,7 +64,12 @@ async fn find_btwattch(central: &Adapter) -> Vec<Peripheral> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    // install global collector configured based on RUST_LOG env var.
+    tracing_subscriber::fmt::init();
+
     let opt = Opt::from_args();
+
+    info!("start app");
 
     let manager = Manager::new().await.unwrap();
 
@@ -81,13 +89,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
     time::sleep(Duration::from_secs(2)).await;
 
     let btwattch = find_btwattch(&central).await;
-    println!("btwattch: {:?}", btwattch);
+    info!("btwattch: {:?}", btwattch);
 
     // connect to the device
     for bw in btwattch.iter() {
         bw.connect().await?;
         if bw.is_connected().await? {
-            println!(
+            info!(
                 "connected: {}",
                 bw.properties().await?.unwrap().local_name.unwrap()
             );
@@ -100,7 +108,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let tlm_char = chars
             .iter()
             .find(|c| {
-                println!("{}", c.uuid);
+                info!("{}", c.uuid);
                 c.uuid == rx_uuid
             })
             .expect("Unable to find characterics");
@@ -112,7 +120,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let tx_uuid = Uuid::parse_str("6e400002-b5a3-f393-e0a9-e50e24dcca9e").unwrap();
     let cmd_char = chars_it
         .find(|c| {
-            println!("{}", c.uuid);
+            info!("{}", c.uuid);
             c.uuid == tx_uuid
         })
         .expect("Unable to find characterics");
@@ -129,7 +137,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let _payload = vec![0xAA, 0x00, 0x01, 0x83];
             let payload = vec![0xAA, 0x00, 0x01, 0x08, 0xB3];
 
-            //println!("send");
+            debug!("send");
 
             for bw in btwattch.iter() {
                 bw.write(&cmd, &payload, WriteType::WithoutResponse)
@@ -162,7 +170,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     data_buf.extend(data.value);
                 }
 
-                //println!("recv: {:x?}", data_buf);
+                debug!("recv: {:x?}", data_buf);
 
                 if data_buf.len() < 23 {
                     continue;
@@ -191,7 +199,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 let wattage = i64::from_le_bytes(wattage);
                 let wattage = wattage as f64 / 16777216.0;
 
-                println!(
+                debug!(
                     "addr = {}, V = {}, A = {}, W = {}",
                     address, voltage, current, wattage
                 );
