@@ -6,11 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+axum = { version = "0.5.15", features = ["macros"] }
 btleplug = "0.10.0"
 byteorder = "1.4.3"
 chrono = "0.4.22"
 crc = "3.0.0"
 futures = "0.3.23"
+serde = "1.0.143"
 #influxdb = { version = "0.5.2", default-features = false, features = ["derive", "use-serde", "h1-client-rustls"] }
 #influxdb2_client = { git = "https://github.com/influxdata/influxdb_iox" }
 structopt = "0.3.26"

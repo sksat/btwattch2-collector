@@ -8,13 +8,31 @@ use tokio::time;
 
 use structopt::StructOpt;
 
+use axum::{
+    http::StatusCode,
+    response::IntoResponse,
+    routing::{get, post},
+    Json, Router,
+};
+use serde::{Deserialize, Serialize};
+use std::net::SocketAddr;
+
 use tracing::{debug, info};
 
 mod btwattch2;
 
 #[derive(Debug, Clone, StructOpt)]
 #[structopt(name = "btwattch2-collector")]
-struct Opt {
+struct Opt {}
+
+#[derive(Deserialize)]
+struct Target {
+    action: String,
+    addr: String,
+}
+
+#[derive(Serialize)]
+struct TargetResult {
     addr: String,
 }
 
@@ -25,12 +43,24 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let opt = Opt::from_args();
 
-    turn_off(opt).await?;
+    let app = Router::new()
+        // `GET /` goes to `root`
+        //.route("/", get(root))
+        .route("/command", post(command));
+
+    let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
+    tracing::debug!("listening on {}", addr);
+    axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
 
     Ok(())
 }
 
-async fn turn_off(opt: Opt) -> Result<(), Box<dyn Error>> {
+async fn command(arg: Json<Target>) -> impl IntoResponse {
+    info!("addr: {}, action: {}", arg.addr, arg.action);
+
     let manager = Manager::new().await.unwrap();
 
     // get the first bluetooth adapter
@@ -43,26 +73,26 @@ async fn turn_off(opt: Opt) -> Result<(), Box<dyn Error>> {
         .expect("Unable to find adapters.");
 
     // start scanning for devices
-    central.start_scan(ScanFilter::default()).await?;
+    central.start_scan(ScanFilter::default()).await.unwrap();
     // instead of waiting, you can use central.events() to get a stream which will
     // notify you of new devices, for an example of that see examples/event_driven_discovery.rs
     time::sleep(Duration::from_secs(2)).await;
 
     let btwattch = btwattch2::find_btwattch(&central).await;
-    let addr = BDAddr::from_str(&opt.addr).unwrap();
+    let addr = BDAddr::from_str(&arg.addr).unwrap();
     let bw = btwattch.iter().find(|&bw| bw.address() == addr).unwrap();
-    if bw.address() == BDAddr::from_str(&opt.addr).unwrap() {}
+    if bw.address() == BDAddr::from_str(&arg.addr).unwrap() {}
     info!("btwattch: {:?}", btwattch);
 
     // connect to the device
-    bw.connect().await?;
-    if bw.is_connected().await? {
+    bw.connect().await.unwrap();
+    if bw.is_connected().await.unwrap() {
         info!(
             "connected: {}",
-            bw.properties().await?.unwrap().local_name.unwrap()
+            bw.properties().await.unwrap().unwrap().local_name.unwrap()
         );
     }
-    bw.discover_services().await?;
+    bw.discover_services().await.unwrap();
 
     // find the characteristic we want
     let chars = bw.characteristics();
@@ -73,7 +103,7 @@ async fn turn_off(opt: Opt) -> Result<(), Box<dyn Error>> {
             c.uuid == btwattch2::RX_UUID
         })
         .expect("Unable to find characterics");
-    bw.subscribe(tlm_char).await?;
+    bw.subscribe(tlm_char).await.unwrap();
 
     let chars = bw.characteristics();
     let mut chars_it = chars.iter();
@@ -93,5 +123,8 @@ async fn turn_off(opt: Opt) -> Result<(), Box<dyn Error>> {
         .await
         .unwrap();
 
-    Ok(())
+    let r = TargetResult {
+        addr: arg.addr.clone(),
+    };
+    (StatusCode::CREATED, Json(r))
 }
