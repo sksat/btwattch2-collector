@@ -6,15 +6,15 @@ on:
       - 'main'
     tags:
       - 'v*'
-  pull_request:
-    paths:
-      - '.github/workflows/build-image.yml'
-      - 'docker-bake.hcl'
-      - 'Dockerfile*'
-      - 'rust-toolchain'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - 'src/**'
+  #pull_request:
+  #  paths:
+  #    - '.github/workflows/build-image.yml'
+  #    - 'docker-bake.hcl'
+  #    - 'Dockerfile*'
+  #    - 'rust-toolchain'
+  #    - 'Cargo.toml'
+  #    - 'Cargo.lock'
+  #    - 'src/**'
 
 jobs:
   build_image:
