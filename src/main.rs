@@ -1,10 +1,9 @@
 use std::convert::TryInto;
 
 use btleplug::api::{Central, Manager as _, Peripheral as _, ScanFilter, WriteType};
-use btleplug::platform::{Adapter, Manager, Peripheral};
+use btleplug::platform::Manager;
 use std::error::Error;
 use std::time::Duration;
-use uuid::Uuid;
 
 use tokio::time;
 
@@ -13,7 +12,8 @@ use futures::stream::StreamExt;
 use structopt::StructOpt;
 
 use tracing::{debug, info};
-use tracing_subscriber;
+
+mod btwattch2;
 
 #[derive(Debug, Clone, StructOpt)]
 #[structopt(name = "btwattch2-collector")]
@@ -29,37 +29,6 @@ struct Opt {
 
     #[structopt(env)]
     influxdb_token: String,
-}
-
-async fn is_btwattch2(peripheral: &Peripheral) -> bool {
-    if peripheral
-        .properties()
-        .await
-        .unwrap()
-        .unwrap()
-        .local_name
-        .iter()
-        .any(|name| name.contains("BTWATTCH2"))
-    {
-        return true;
-    }
-    false
-}
-
-async fn find_btwattch(central: &Adapter) -> Vec<Peripheral> {
-    let peripherals = central.peripherals().await.unwrap();
-    futures::stream::iter(peripherals)
-        .filter_map(|p| async {
-            if is_btwattch2(&p).await {
-                Some(p)
-            } else {
-                None
-            }
-        })
-        .collect()
-        .await
-    //let tmp = join_all(it).await;
-    //tmp.iter().collect::<Vec<Peripheral>>()
 }
 
 #[tokio::main]
@@ -88,7 +57,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // notify you of new devices, for an example of that see examples/event_driven_discovery.rs
     time::sleep(Duration::from_secs(2)).await;
 
-    let btwattch = find_btwattch(&central).await;
+    let btwattch = btwattch2::find_btwattch(&central).await;
     info!("btwattch: {:?}", btwattch);
 
     // connect to the device
@@ -104,12 +73,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         // find the characteristic we want
         let chars = bw.characteristics();
-        let rx_uuid = Uuid::parse_str("6e400003-b5a3-f393-e0a9-e50e24dcca9e").unwrap();
         let tlm_char = chars
             .iter()
             .find(|c| {
                 info!("{}", c.uuid);
-                c.uuid == rx_uuid
+                c.uuid == btwattch2::RX_UUID
             })
             .expect("Unable to find characterics");
         bw.subscribe(tlm_char).await?
@@ -117,11 +85,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let chars = btwattch[0].characteristics();
     let mut chars_it = chars.iter();
-    let tx_uuid = Uuid::parse_str("6e400002-b5a3-f393-e0a9-e50e24dcca9e").unwrap();
     let cmd_char = chars_it
         .find(|c| {
             info!("{}", c.uuid);
-            c.uuid == tx_uuid
+            c.uuid == btwattch2::TX_UUID
         })
         .expect("Unable to find characterics");
 
@@ -134,8 +101,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     tokio::spawn(async move {
         let _rt = tokio::runtime::Runtime::new().unwrap();
         loop {
-            let _payload = vec![0xAA, 0x00, 0x01, 0x83];
-            let payload = vec![0xAA, 0x00, 0x01, 0x08, 0xB3];
+            let _payload = vec![0xAA, 0x00, 0x01, 0x08, 0xB3];
+            let payload = btwattch2::gen_cmd(btwattch2::CMD_MONITORING);
 
             debug!("send");
 
