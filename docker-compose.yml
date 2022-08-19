@@ -15,6 +15,7 @@ services:
     volumes:
       - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket
     environment:
+      - INFLUXDB_HOST
       - INFLUXDB_ORG
       - INFLUXDB_BUCKET
       - INFLUXDB_TOKEN
