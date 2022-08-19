@@ -40,6 +40,15 @@ pub fn gen_cmd(payload: Vec<u8>) -> Vec<u8> {
     p
 }
 
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generate_command() {
+        assert_eq!(gen_cmd(vec![0x08]), vec![0xAA, 0x00, 0x01, 0x08, 0xB3]);
+    }
+}
+
 pub async fn is_btwattch2(peripheral: &Peripheral) -> bool {
     if peripheral
         .properties()
