@@ -81,7 +81,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .expect("Unable to find characterics");
 
     let cmd = cmd_char.clone();
-    let payload = btwattch2::gen_cmd(btwattch2::CMD_MONITORING);
+    let payload = btwattch2::gen_cmd(btwattch2::CMD_TURN_OFF);
 
     debug!("send");
 
