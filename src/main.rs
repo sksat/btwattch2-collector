@@ -8,14 +8,10 @@ use tokio::time;
 
 use structopt::StructOpt;
 
-use axum::{
-    http::StatusCode,
-    response::IntoResponse,
-    routing::{get, post},
-    Json, Router,
-};
+use actix_web::{middleware, web, App, HttpResponse, HttpServer, Result};
+use actix_web::{post, Responder};
+
 use serde::{Deserialize, Serialize};
-use std::net::SocketAddr;
 
 use tracing::{debug, info};
 
@@ -50,22 +46,36 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let opt = Opt::from_args();
 
-    let app = Router::new()
-        // `GET /` goes to `root`
-        //.route("/", get(root))
-        .route("/command", post(command));
-
-    let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
-    tracing::debug!("listening on {}", addr);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+    HttpServer::new(move || {
+        App::new()
+            .wrap(middleware::Logger::default())
+            .configure(app_config)
+    })
+    .bind("0.0.0.0:3000")?
+    .run()
+    .await?;
 
     Ok(())
 }
 
-async fn command(arg: Json<Target>) -> impl IntoResponse {
+fn app_config(cfg: &mut web::ServiceConfig) {
+    cfg.service(
+        web::scope("")
+            .service(web::resource("/").route(web::get().to(index)))
+            //.service(web::resource("/result").route(web::get().to(page_result)))
+            .service(api_command),
+    );
+}
+
+async fn index() -> Result<HttpResponse> {
+    let html = include_str!("index.html");
+    Ok(HttpResponse::Ok()
+        .content_type("text/html; chaset=utf-8")
+        .body(html))
+}
+
+#[post("/command")]
+async fn api_command(arg: web::Form<Target>) -> impl Responder {
     info!("addr: {}, action: {:?}", arg.addr, arg.action);
 
     let manager = Manager::new().await.unwrap();
@@ -133,8 +143,7 @@ async fn command(arg: Json<Target>) -> impl IntoResponse {
         .await
         .unwrap();
 
-    let r = TargetResult {
-        addr: arg.addr.clone(),
-    };
-    (StatusCode::CREATED, Json(r))
+    HttpResponse::Found()
+        .append_header(("Location", "/result"))
+        .finish()
 }

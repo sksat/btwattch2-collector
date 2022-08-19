@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-axum = { version = "0.5.15", features = ["macros"] }
+actix-web = "4.1.0"
 btleplug = "0.10.0"
 byteorder = "1.4.3"
 chrono = "0.4.22"
