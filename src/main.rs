@@ -25,8 +25,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let opt = Opt::from_args();
 
-    info!("start app");
+    turn_off(opt).await?;
 
+    Ok(())
+}
+
+async fn turn_off(opt: Opt) -> Result<(), Box<dyn Error>> {
     let manager = Manager::new().await.unwrap();
 
     // get the first bluetooth adapter
