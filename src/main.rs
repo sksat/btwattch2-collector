@@ -16,16 +16,16 @@ use structopt::StructOpt;
 #[structopt(name = "btwattch2-collector")]
 struct Opt {
     #[structopt(env)]
-    inflxdb_host: String,
+    influxdb_host: String,
 
     #[structopt(env)]
-    inflxdb_org: String,
+    influxdb_org: String,
 
     #[structopt(env)]
-    inflxdb_bucket: String,
+    influxdb_bucket: String,
 
     #[structopt(env)]
-    inflxdb_token: String,
+    influxdb_token: String,
 }
 
 async fn is_btwattch2(peripheral: &Peripheral) -> bool {
@@ -145,7 +145,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut btw_nstream: Vec<(_, Vec<u8>)> =
         btw_nstream.into_iter().zip(vec![Vec::new(); len]).collect();
 
-    let iclient = influxdb2_client::Client::new(opt.inflxdb_host, opt.inflxdb_token);
+    let iclient = influxdb2_client::Client::new(opt.influxdb_host, opt.influxdb_token);
 
     loop {
         for nstream in &mut btw_nstream {
@@ -205,8 +205,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
                 iclient
                     .write(
-                        &opt.inflxdb_org,
-                        &opt.inflxdb_bucket,
+                        &opt.influxdb_org,
+                        &opt.influxdb_bucket,
                         futures::stream::iter(vec![point]),
                     )
                     .await?;
