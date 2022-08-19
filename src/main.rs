@@ -1,11 +1,10 @@
-use btleplug::api::{Central, Manager as _, Peripheral as _, ScanFilter, WriteType};
+use btleplug::api::{BDAddr, Central, Manager as _, Peripheral as _, ScanFilter, WriteType};
 use btleplug::platform::Manager;
 use std::error::Error;
+use std::str::FromStr;
 use std::time::Duration;
 
 use tokio::time;
-
-use futures::stream::StreamExt;
 
 use structopt::StructOpt;
 
@@ -15,7 +14,9 @@ mod btwattch2;
 
 #[derive(Debug, Clone, StructOpt)]
 #[structopt(name = "btwattch2-collector")]
-struct Opt {}
+struct Opt {
+    addr: String,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -44,7 +45,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     time::sleep(Duration::from_secs(2)).await;
 
     let btwattch = btwattch2::find_btwattch(&central).await;
-    let bw = &btwattch[0];
+    let addr = BDAddr::from_str(&opt.addr).unwrap();
+    let bw = btwattch.iter().find(|&bw| bw.address() == addr).unwrap();
+    if bw.address() == BDAddr::from_str(&opt.addr).unwrap() {}
     info!("btwattch: {:?}", btwattch);
 
     // connect to the device
