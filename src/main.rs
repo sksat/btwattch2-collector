@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 
 use btleplug::api::{Central, Manager as _, Peripheral as _, ScanFilter, WriteType};
-use btleplug::platform::{Adapter, Manager, Peripheral};
+use btleplug::platform::Manager;
 use std::error::Error;
 use std::time::Duration;
 use uuid::Uuid;
@@ -13,7 +13,8 @@ use futures::stream::StreamExt;
 use structopt::StructOpt;
 
 use tracing::{debug, info};
-use tracing_subscriber;
+
+mod btwattch2;
 
 #[derive(Debug, Clone, StructOpt)]
 #[structopt(name = "btwattch2-collector")]
@@ -29,37 +30,6 @@ struct Opt {
 
     #[structopt(env)]
     influxdb_token: String,
-}
-
-async fn is_btwattch2(peripheral: &Peripheral) -> bool {
-    if peripheral
-        .properties()
-        .await
-        .unwrap()
-        .unwrap()
-        .local_name
-        .iter()
-        .any(|name| name.contains("BTWATTCH2"))
-    {
-        return true;
-    }
-    false
-}
-
-async fn find_btwattch(central: &Adapter) -> Vec<Peripheral> {
-    let peripherals = central.peripherals().await.unwrap();
-    futures::stream::iter(peripherals)
-        .filter_map(|p| async {
-            if is_btwattch2(&p).await {
-                Some(p)
-            } else {
-                None
-            }
-        })
-        .collect()
-        .await
-    //let tmp = join_all(it).await;
-    //tmp.iter().collect::<Vec<Peripheral>>()
 }
 
 #[tokio::main]
@@ -88,7 +58,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // notify you of new devices, for an example of that see examples/event_driven_discovery.rs
     time::sleep(Duration::from_secs(2)).await;
 
-    let btwattch = find_btwattch(&central).await;
+    let btwattch = btwattch2::find_btwattch(&central).await;
     info!("btwattch: {:?}", btwattch);
 
     // connect to the device
