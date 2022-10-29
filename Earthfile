@@ -1,5 +1,4 @@
 VERSION 0.6
-FROM rust:1.63.0
 
 build-all-platforms:
   BUILD --platform=linux/amd64 --platform=linux/arm/v7 +build
@@ -25,6 +24,7 @@ build-cache:
   SAVE ARTIFACT $CARGO_HOME cargo_home
 
 build:
+  FROM rust:1.63.0
   COPY --dir src Cargo.lock Cargo.toml .
   COPY +build-cache/cargo_home $CARGO_HOME
   COPY +build-cache/target target
