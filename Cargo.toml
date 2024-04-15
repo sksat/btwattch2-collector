@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 btleplug = "0.10.0"
 byteorder = "1.4.3"
-chrono = "0.4.22"
+chrono = "0.4.38"
 crc = "3.0.0"
 futures = "0.3.23"
 #influxdb = { version = "0.5.2", default-features = false, features = ["derive", "use-serde", "h1-client-rustls"] }
