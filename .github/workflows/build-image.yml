@@ -20,7 +20,7 @@ jobs:
   build_image:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.1.0
+      - uses: actions/checkout@v3.6.0
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2.1.0
